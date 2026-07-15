@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pakar Gym - Jadwal Dinamis, CF & Nutrisi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --rest: #10b981;
+            --rest-bg: #ecfdf5;
+            --radius: 12px;
+            --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin: 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 35px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background-color: var(--accent);
+            border-radius: 2px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: var(--text-main);
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+        }
+
+        .btn-submit:hover {
+            background-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .result-box {
+            display: none;
+            animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .bmi-badge-container {
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .row-rest td {
+            background-color: var(--rest-bg) !important;
+        }
+
+        .text-rest {
+            color: var(--rest);
+            font-weight: 700;
+        }
+        
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        .badge-success { background-color: #dcfce7; color: #166534; }
+        .badge-warning { background-color: #fef9c3; color: #854d0e; }
+        .badge-danger { background-color: #fee2e2; color: #991b1b; }
+        
+        .nutrition-box {
+            background-color: #f8fafc;
+            border-left: 4px solid var(--accent);
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .nutrition-box h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .nutrition-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .nutrition-box li {
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🏋️‍♂️ Sistem Pakar Gym</h1>
+        <p>Analisis Kondisi, Keamanan Alat, Jadwal Mingguan & Panduan Pola Makan</p>
+    </header>
+
+    <div class="card">
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Tinggi Badan (cm)</label>
+                <input type="number" id="tb" value="175">
+            </div>
+            <div class="form-group">
+                <label>Berat Badan (kg)</label>
+                <input type="number" id="bb" value="62">
+            </div>
+        </div>
+
+        <div class="section-title">Konsultasi Fisik (Gejala & Keluhan)</div>
+
+        <div class="form-group">
+            <label>1. Apakah Anda termasuk pemula yang belum pernah/jarang ke gym?</label>
+            <select id="cf_pakar_beginner">
+                <option value="1.0">Iya (1.0)</option>
+                <option value="0.8">Mungkin Iya (0.8)</option>
+                <option value="0.0">Tidak Tahu (0.0)</option>
+                <option value="-0.6">Mungkin Tidak (-0.6)</option>
+                <option value="-1.0">Tidak (-1.0)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>2. Apakah Anda merasakan nyeri atau linu pada sendi LUTUT?</label>
+            <select id="cf_pakar_lutut">
+                <option value="-1.0">Tidak (-1.0)</option>
+                <option value="0.0">Tidak Tahu (0.0)</option>
+                <option value="0.4">Bisa Jadi (0.4)</option>
+                <option value="0.8">Mungkin Iya (0.8)</option>
+                <option value="1.0">Iya (1.0)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>3. Apakah Anda memiliki riwayat sakit PINGGANG BAWAH (Lower Back)?</label>
+            <select id="cf_pakar_pinggang">
+                <option value="-1.0">Tidak (-1.0)</option>
+                <option value="0.0">Tidak Tahu (0.0)</option>
+                <option value="0.4">Bisa Jadi (0.4)</option>
+                <option value="0.8">Mungkin Iya (0.8)</option>
+                <option value="1.0">Iya (1.0)</option>
+            </select>
+        </div>
+
+        <button class="btn-submit" onclick="hitungCertaintyFactor()">Buat Program Lengkap Saya</button>
+    </div>
+
+    <div id="hasil" class="card result-box">
+        <h2 style="margin-top: 0; font-size: 1.5rem; font-weight: 800;">📊 Hasil Analisis Kepastian Alat (CF)</h2>
+        
+        <div class="bmi-badge-container">
+            <span style="font-size: 0.95rem; color: var(--text-main);">Status BMI Anda: <strong id="res_bmi" style="font-size: 1.1rem;"></strong> <span id="res_bmi_status" style="font-weight: 600;"></span></span>
+        </div>
+        
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Sistem mengevaluasi keamanan seluruh alat yang akan dipakai berdasarkan keluhan fisik Anda:</p>
+        
+        <table id="tabel_hasil">
+            <thead>
+                <tr>
+                    <th>Alat & Gerakan</th>
+                    <th>Fokus Otot</th>
+                    <th>Kepastian (CF)</th>
+                    <th>Status Keamanan</th>
+                </tr>
+            </thead>
+            <tbody id="body_tabel">
+            </tbody>
+        </table>
+
+        <div class="section-title">📅 Jadwal Latihan Dinamis (Set & Reps)</div>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Program disusun dengan prinsip <strong>Push/Pull/Legs (PPL)</strong>. Setiap gerakan dilengkapi target Set dan Repetisi.</p>
+        
+        <table id="tabel_jadwal">
+            <thead>
+                <tr>
+                    <th width="15%">Hari</th>
+                    <th width="30%">Fokus Latihan</th>
+                    <th>Alat / Gerakan Rekomendasi (Target Set x Reps)</th>
+                </tr>
+            </thead>
+            <tbody id="body_jadwal">
+            </tbody>
+        </table>
+
+        <div class="section-title">🍽️ Panduan Nutrisi & Pola Makan</div>
+        <div id="box_nutrisi" class="nutrition-box">
+        </div>
+    </div>
+</div>
+
+<script>
+// Fungsi Rumus Kombinasi CF
+function combineCF(cf1, cf2) {
+    if (cf1 >= 0 && cf2 >= 0) {
+        return cf1 + cf2 * (1 - cf1);
+    } else if (cf1 < 0 && cf2 < 0) {
+        return cf1 + cf2 * (1 + cf1);
+    } else {
+        return (cf1 + cf2) / (1 - Math.min(Math.abs(cf1), Math.abs(cf2)));
+    }
+}
+
+function hitungCertaintyFactor() {
+    // 1. Ambil Data Input
+    const tb = parseFloat(document.getElementById('tb').value) / 100;
+    const bb = parseFloat(document.getElementById('bb').value);
+    
+    const cfUserBeginner = parseFloat(document.getElementById('cf_pakar_beginner').value);
+    const cfUserLutut = parseFloat(document.getElementById('cf_pakar_lutut').value);
+    const cfUserPinggang = parseFloat(document.getElementById('cf_pakar_pinggang').value);
+
+    // Hitung BMI
+    const bmi = bb / (tb * tb);
+    document.getElementById('res_bmi').innerText = bmi.toFixed(2);
+    
+    let bmiStatus = "";
+    if (bmi < 18.5) bmiStatus = "(Kekurangan Berat Badan / Underweight)";
+    else if (bmi >= 18.5 && bmi <= 24.9) bmiStatus = "(Ideal / Normal)";
+    else if (bmi >= 25 && bmi <= 29.9) bmiStatus = "(Kelebihan Berat Badan / Overweight)";
+    else bmiStatus = "(Obesitas)";
+    
+    document.getElementById('res_bmi_status').innerText = bmiStatus;
+
+    // 2. BASIS PENGETAHUAN (Knowledge Base Rules)
+    
+    // PERBAIKAN LOGIKA:
+    // Jika user menjawab "Tidak (-1.0)", nilai dipositifkan karena alat mesin tetap aman untuk pro.
+    let cfAmanDasar = cfUserBeginner === 0 ? 0.5 : Math.abs(cfUserBeginner);
+
+    // --- Latihan Kaki (Legs) ---
+    let cfR1_LegPress = cfAmanDasar * 0.7; 
+    let cfR2_LegPress = cfUserLutut * (-0.8); 
+    let cfFinal_LegPress = combineCF(cfR1_LegPress, cfR2_LegPress);
+
+    // Khusus Squat, nilai tetap menggunakan cfUserBeginner asli
+    let cfR3_Squat = cfUserBeginner * (-0.6); 
+    let cfR4_Squat = cfUserPinggang * (-0.9); 
+    let cfFinal_Squat = combineCF(cfR3_Squat, cfR4_Squat);
+
+    let cfR_LegCurl1 = cfAmanDasar * 0.8;
+    let cfR_LegCurl2 = cfUserLutut * (-0.3); 
+    let cfFinal_LegCurl = combineCF(cfR_LegCurl1, cfR_LegCurl2);
+
+    // --- Latihan Dada & Bahu (Push) ---
+    let cfFinal_ChestPress = cfAmanDasar * 0.9;
+    
+    let cfR_Shoulder1 = cfAmanDasar * 0.8;
+    let cfR_Shoulder2 = cfUserPinggang * 0.1; 
+    let cfFinal_Shoulder = combineCF(cfR_Shoulder1, cfR_Shoulder2);
+
+    let cfFinal_LateralRaise = cfAmanDasar * 0.85; 
+    let cfFinal_TricepPushdown = cfAmanDasar * 0.9; 
+
+    // --- Latihan Punggung & Bicep (Pull) ---
+    let cfR6_Lat = cfAmanDasar * 0.8;
+    let cfR7_Lat = cfUserPinggang * 0.2; 
+    let cfFinal_Lat = combineCF(cfR6_Lat, cfR7_Lat);
+
+    let cfFinal_SeatedRow = cfAmanDasar * 0.75;
+    let cfFinal_BicepCurl = cfAmanDasar * 0.9; 
+    let cfFinal_FacePull = cfAmanDasar * 0.85; 
+
+    // --- Latihan Perut (Core) ---
+    let cfR_Plank1 = cfAmanDasar * 0.7;
+    let cfR_Plank2 = cfUserPinggang * (-0.5); 
+    let cfFinal_Plank = combineCF(cfR_Plank1, cfR_Plank2);
+
+    // 3. Tampilkan Tabel Evaluasi CF
+    let daftarAlat = [
+        { nama: "Chest Press Machine", otot: "Dada", cf: cfFinal_ChestPress },
+        { nama: "Lat Pulldown Machine", otot: "Punggung", cf: cfFinal_Lat },
+        { nama: "Leg Press Machine", otot: "Paha (Kaki)", cf: cfFinal_LegPress },
+        { nama: "Barbell Back Squat", otot: "Kaki & Core", cf: cfFinal_Squat },
+        { nama: "Seated Dumbbell Shoulder Press", otot: "Bahu", cf: cfFinal_Shoulder },
+        { nama: "Tricep Pushdown (Kabel)", otot: "Lengan Belakang", cf: cfFinal_TricepPushdown },
+        { nama: "Dumbbell Bicep Curl", otot: "Lengan Depan", cf: cfFinal_BicepCurl },
+        { nama: "Face Pull (Kabel)", otot: "Bahu Belakang", cf: cfFinal_FacePull },
+        { nama: "Seated Leg Curl", otot: "Paha Belakang", cf: cfFinal_LegCurl },
+        { nama: "Plank", otot: "Perut / Inti", cf: cfFinal_Plank }
+    ];
+    daftarAlat.sort((a, b) => b.cf - a.cf);
+
+    let htmlRowsCF = "";
+    daftarAlat.forEach(alat => {
+        let persentase = (alat.cf * 100).toFixed(1) + "%";
+        let statusBadge = "";
+        
+        if (alat.cf >= 0.4) statusBadge = `<span class="badge badge-success">Sangat Aman</span>`;
+        else if (alat.cf >= 0.0) statusBadge = `<span class="badge badge-warning">Boleh Digunakan</span>`;
+        else statusBadge = `<span class="badge badge-danger">HINDARI / CORET</span>`;
+
+        htmlRowsCF += `<tr><td><b>${alat.nama}</b></td><td>${alat.otot}</td><td><b>${persentase}</b></td><td>${statusBadge}</td></tr>`;
+    });
+    document.getElementById('body_tabel').innerHTML = htmlRowsCF;
+
+    // 4. LOGIKA JADWAL DINAMIS
+    let dadaAman = cfFinal_ChestPress >= 0 ? "Chest Press Machine" : "Dumbbell Bench Press Ringan";
+    let punggungAman = cfFinal_Lat >= 0 ? "Lat Pulldown Machine" : "Dumbbell Row Bersandar";
+    let bahuAman = cfFinal_Shoulder >= 0 ? "Seated Dumbbell Shoulder Press" : "Machine Shoulder Press";
+    let perutAman = cfFinal_Plank >= 0 ? "Plank (3 Set x 45 Detik)" : "Crunches Ringan (3 Set x 15 Reps)";
+    
+    let kakiAman = "";
+    if (cfFinal_LegPress >= 0 && cfFinal_LegPress >= cfFinal_Squat) {
+        kakiAman = "Leg Press Machine";
+    } else if (cfFinal_Squat >= 0 && cfFinal_Squat > cfFinal_LegPress) {
+        kakiAman = "Barbell Back Squat";
+    } else {
+        kakiAman = "Bodyweight Squat / Leg Extension (Pengganti Aman)";
+    }
+
+    const jadwalList = [
+        { hari: "Senin", fokus: "Dada, Bahu & Tricep<br><span style='color:var(--accent); font-weight:600;'>Push Day</span>", alat: `
+            1. ${dadaAman} <b>(4 Set x 10-12 Reps)</b><br>
+            2. ${bahuAman} <b>(3 Set x 10-12 Reps)</b><br>
+            3. Tricep Pushdown (Kabel) <b>(3 Set x 12-15 Reps)</b><br>
+            4. Dumbbell Lateral Raise <b>(3 Set x 15 Reps)</b>` 
+        },
+        { hari: "Selasa", fokus: "Punggung & Bicep<br><span style='color:var(--accent); font-weight:600;'>Pull Day</span>", alat: `
+            1. ${punggungAman} <b>(4 Set x 10-12 Reps)</b><br>
+            2. Seated Cable Row <b>(3 Set x 10-12 Reps)</b><br>
+            3. Face Pull (Kabel) <b>(3 Set x 12-15 Reps)</b><br>
+            4. Dumbbell Bicep Curl <b>(3 Set x 12 Reps)</b>` 
+        },
+        { hari: "Rabu", fokus: "<span class='text-rest'>Rest (Istirahat)</span>", alat: "<i style='color:var(--text-muted);'>Pemulihan otot tubuh bagian atas. Tidur minimal 7-8 jam.</i>", class: "row-rest" },
+        { hari: "Kamis", fokus: "Kaki & Perut<br><span style='color:var(--accent); font-weight:600;'>Legs & Core</span>", alat: `
+            1. ${kakiAman} <b>(4 Set x 10-12 Reps)</b><br>
+            2. Seated Leg Curl <b>(3 Set x 12 Reps)</b><br>
+            3. Calf Raise (Jinjit Betis) <b>(4 Set x 15-20 Reps)</b><br>
+            4. ${perutAman}` 
+        },
+        { hari: "Jumat", fokus: "Otot Atas Menyeluruh<br><span style='color:var(--accent); font-weight:600;'>Upper Body</span>", alat: `
+            1. ${dadaAman} <b>(3 Set x 12 Reps)</b><br>
+            2. ${punggungAman} <b>(3 Set x 12 Reps)</b><br>
+            3. ${bahuAman} <b>(3 Set x 12 Reps)</b><br>
+            4. Dumbbell Bicep Curl <b>(2 Set x 15 Reps)</b>` 
+        },
+        { hari: "Sabtu", fokus: "Kardio & Kelenturan<br><span style='color:var(--accent); font-weight:600;'>Active Rest</span>", alat: "1. Sepeda Statis / Treadmill (20-30 Menit)<br>2. Peregangan (Stretching) seluruh tubuh." },
+        { hari: "Minggu", fokus: "<span class='text-rest'>Rest Total</span>", alat: "<i style='color:var(--text-muted);'>Pemulihan total untuk persiapan hari Senin.</i>", class: "row-rest" }
+    ];
+
+    let htmlJadwal = "";
+    jadwalList.forEach(item => {
+        htmlJadwal += `
+            <tr class="${item.class || ''}">
+                <td><b>${item.hari}</b></td>
+                <td>${item.fokus}</td>
+                <td>${item.alat}</td>
+            </tr>
+        `;
+    });
+    document.getElementById('body_jadwal').innerHTML = htmlJadwal;
+
+    // 5. LOGIKA NUTRISI BERDASARKAN BMI
+    let boxNutrisi = document.getElementById('box_nutrisi');
+    let nutrisiHtml = "";
+    
+    if (bmi < 18.5) {
+        boxNutrisi.style.backgroundColor = "#eff6ff"; 
+        boxNutrisi.style.borderColor = "#3b82f6";
+        nutrisiHtml = `
+            <h3>📈 Fokus: Caloric Surplus (Bulking)</h3>
+            <p>Karena Anda berada di fase <b>Underweight</b>, otot Anda tidak akan tumbuh jika tidak ada bahan baku (kalori ekstra). Anda harus makan lebih banyak dari yang tubuh Anda bakar.</p>
+            <ul>
+                <li><b>Kalori:</b> Surplus sekitar +300 hingga +500 Kalori per hari dari porsi biasa.</li>
+                <li><b>Karbohidrat:</b> Perbanyak porsi nasi, kentang, gandum, atau roti untuk energi mengangkat beban.</li>
+                <li><b>Protein:</b> Wajib tinggi protein (telur, dada ayam, tempe, tahu, susu) agar otot terbentuk.</li>
+                <li><b>Tips:</b> Makan lebih sering (4-5 kali sehari) dengan porsi sedang jika tidak bisa makan porsi besar sekaligus.</li>
+            </ul>
+        `;
+    } else if (bmi >= 18.5 && bmi <= 24.9) {
+        boxNutrisi.style.backgroundColor = "#f0fdf4"; 
+        boxNutrisi.style.borderColor = "#10b981";
+        nutrisiHtml = `
+            <h3>⚖️ Fokus: Body Recomposition (Maintenance)</h3>
+            <p>Berat badan Anda sudah <b>Ideal</b>. Fokus utama Anda adalah mengubah komposisi tubuh (mengurangi sedikit lemak dan menambah otot secara bersamaan).</p>
+            <ul>
+                <li><b>Kalori:</b> Tetap di tingkat Maintenance (porsi makan normal/biasa), tidak perlu makan terlalu berlebihan.</li>
+                <li><b>Protein:</b> Tingkatkan asupan protein harian (targetkan dada ayam, ikan, telur rebus) untuk menunjang pertumbuhan otot.</li>
+                <li><b>Tips:</b> Perhatikan bentuk tubuh di kaca, bukan angka di timbangan. Timbangan Anda mungkin tidak berubah banyak, tapi baju akan terasa lebih pas karena otot lebih padat.</li>
+            </ul>
+        `;
+    } else {
+        boxNutrisi.style.backgroundColor = "#fff7ed"; 
+        boxNutrisi.style.borderColor = "#f97316";
+        nutrisiHtml = `
+            <h3>📉 Fokus: Caloric Deficit (Cutting / Fat Loss)</h3>
+            <p>Karena Anda berada di kategori <b>Overweight / Obesitas</b>, fokus utamanya adalah memangkas lemak namun tetap mempertahankan otot yang Anda latih di gym.</p>
+            <ul>
+                <li><b>Kalori:</b> Lakukan Defisit Kalori (kurangi -300 hingga -500 Kalori harian). Kurangi porsi nasi/karbohidrat sekitar 20-30%.</li>
+                <li><b>Pantangan:</b> Kurangi drastis gorengan, minuman manis berkalori cair (boba, kopi susu manis), dan camilan olahan.</li>
+                <li><b>Protein & Serat:</b> Perbanyak sayuran hijau agar cepat kenyang dan makan protein tinggi agar otot tidak susut saat kalori dikurangi.</li>
+                <li><b>Tips:</b> Kardio di hari Sabtu sangat penting untuk membantu pembakaran kalori ekstra.</li>
+            </ul>
+        `;
+    }
+    boxNutrisi.innerHTML = nutrisiHtml;
+
+    // Tampilkan Hasil
+    document.getElementById('hasil').style.display = 'block';
+    document.getElementById('hasil').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
